@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
                      " mplayer ",
                      "-slave", "-quiet","-idle",
                      "-input", "file=./fifo_cmd",
-                     "/home/sensa/Share1/Audio_Player/Song/Calc.mp3", NULL);
+                     "../Audio_Player2/Song/Calc.mp3", NULL);
     }
     else
     {

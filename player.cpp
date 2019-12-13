@@ -25,8 +25,9 @@ Player::Player(QWidget *parent) :
     connect(ui->btn_playpause,SIGNAL(clicked()),this,SLOT(playOrPause()));//
     connect(ui->btn_front,SIGNAL(clicked()),this,SLOT(musicFront()));
     connect(ui->btn_next,SIGNAL(clicked()),this,SLOT(musicNext()));
+    connect(ui->btn_mute,SIGNAL(clicked()),this,SLOT(btnMute()));
     connect(ui->listWidget,&QListWidget::doubleClicked,[=]{
-        char buff[128]= "loadfile ../Audio_Player/Song/";
+        char buff[128]= "loadfile ../Audio_Player2/Song/";
         QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
         strcpy(buf,ba.data());
         strcat(buff,buf);
@@ -47,7 +48,7 @@ Player::~Player()
 
 void Player::getItemOfSong()
 {
-    DIR *dir = opendir("../Audio_Player/Song");
+    DIR *dir = opendir("../Audio_Player2/Song");
     int i = 0;
     ui->listWidget->clear();
     while (1) {
@@ -83,7 +84,7 @@ void Player::musicFront()
     {
         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()-1);
     }
-    char buff[128]= "loadfile ../Audio_Player/Song/";
+    char buff[128]= "loadfile ../Audio_Player2/Song/";
     QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
     strcpy(buf,ba.data());
     strcat(buff,buf);
@@ -103,7 +104,7 @@ void Player::musicNext()
     {
         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()+1);
     }
-    char buff[128]= "loadfile ../Audio_Player/Song/";
+    char buff[128]= "loadfile ../Audio_Player2/Song/";
     QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
     strcpy(buf,ba.data());
     strcat(buff,buf);
@@ -116,4 +117,20 @@ void Player::musicNext()
 void Player::VolumeSlider(int position)
 {
     //write(fd,QString("volume " + QString::number(position) +" 2\n").toUtf8(),strlen(QString("volume " + QString::number(position) +" 2\n").toUtf8()));
+}
+
+void Player::btnMute()
+{
+    int flag_mute = 1;
+    if(flag_mute == 1)
+    {
+        write(fd,"mute 0\n",strlen("mute 0\n"));
+        flag_mute = 0;
+    }
+    else if(flag_mute == 0)
+    {
+        write(fd,"mute 1\n",strlen("mute 1\n"));
+        qDebug();
+        flag_mute = 1;
+    }
 }

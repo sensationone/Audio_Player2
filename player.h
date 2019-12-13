@@ -47,6 +47,7 @@ public slots:
     void musicFront(void);
     void musicNext(void);
     void VolumeSlider(int position);
+    void btnMute(void);
 
 private:
     Ui::Player *ui;

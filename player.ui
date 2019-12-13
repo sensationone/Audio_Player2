@@ -155,7 +155,7 @@
   <widget class="QPushButton" name="btn_playpause">
    <property name="geometry">
     <rect>
-     <x>350</x>
+     <x>270</x>
      <y>470</y>
      <width>71</width>
      <height>61</height>
@@ -168,7 +168,7 @@
   <widget class="QPushButton" name="btn_next">
    <property name="geometry">
     <rect>
-     <x>630</x>
+     <x>480</x>
      <y>470</y>
      <width>71</width>
      <height>61</height>
@@ -176,6 +176,19 @@
    </property>
    <property name="text">
     <string>&gt;&gt;|</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_mute">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>460</y>
+     <width>71</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Mute</string>
    </property>
   </widget>
  </widget>
