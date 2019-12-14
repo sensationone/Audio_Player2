@@ -35,11 +35,11 @@ int main(int argc, char *argv[])
         dup2(fd,0);
         close(1);
         dup2(fd1,1);
-         execlp("mplayer",
-                     " mplayer ",
-                     "-slave", "-quiet","-idle",
-                     "-input", "file=./fifo_cmd",
-                     "../Audio_Player2/Song/Calc.mp3", NULL);
+        execlp("mplayer",
+               " mplayer ",
+               "-slave", "-quiet","-idle",
+               "-input", "file=./fifo_cmd",
+               "../Audio_Player/hello.mp3", NULL);
     }
     else
     {

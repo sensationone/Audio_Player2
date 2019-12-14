@@ -46,7 +46,6 @@ public slots:
     void playOrPause(void);
     void musicFront(void);
     void musicNext(void);
-    void VolumeSlider(int position);
     void btnMute(void);
 
 private:

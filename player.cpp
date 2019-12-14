@@ -6,8 +6,16 @@ Player::Player(QWidget *parent) :
     ui(new Ui::Player)
 {
     ui->setupUi(this);
-    ui->volumeslider->setSliderPosition(20);
-    ui->volumeslider->setValue(20);
+    ui->volumeslider->setSliderPosition(99);
+    ui->volumeslider->setValue(99);
+    ui->spinBox_volume->setValue(99);
+    ui->spinBox_volume->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    ui->spinBox_volume->setReadOnly(1);
+
+    QListWidgetItem *item = new QListWidgetItem;
+    QWidget *wgt = new QWidget;
+    ui->listWidget->addItem(item);
+    ui->listWidget->setItemWidget(item,wgt);
     /**********************************************************/
     //set background picture
     this->setAutoFillBackground(true);
@@ -27,7 +35,7 @@ Player::Player(QWidget *parent) :
     connect(ui->btn_next,SIGNAL(clicked()),this,SLOT(musicNext()));
     connect(ui->btn_mute,SIGNAL(clicked()),this,SLOT(btnMute()));
     connect(ui->listWidget,&QListWidget::doubleClicked,[=]{
-        char buff[128]= "loadfile ../Audio_Player2/Song/";
+        char buff[128]= "loadfile ../Audio_Player/Song/";
         QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
         strcpy(buf,ba.data());
         strcat(buff,buf);
@@ -37,8 +45,26 @@ Player::Player(QWidget *parent) :
         fflush(stdout);
     });
 
+    connect(ui->volumeslider, &QSlider::valueChanged, ui->spinBox_volume, &QSpinBox::setValue);
+        connect(ui->volumeslider,&QSlider::valueChanged,[=]{
+            int val = ui->spinBox_volume->value();
+            char buff1[128] ="volume ";
+            char a[20];
+            sprintf(a,"%d",val);
+            strcat(buff1,a);
+            strcat(buff1," 1");
+            strcat(buff1,"\n");
+//            if(PuaesFlag == 0)
+//            {
+            write(fd,buff1,strlen(buff1));
+//            }
+
+
+
+        });
+
     getItemOfSong();
-    ui->listWidget->setCurrentRow(ui->listWidget->count());
+    ui->listWidget->setCurrentRow(6);
 }
 
 Player::~Player()
@@ -48,7 +74,7 @@ Player::~Player()
 
 void Player::getItemOfSong()
 {
-    DIR *dir = opendir("../Audio_Player2/Song");
+    DIR *dir = opendir("../Audio_Player/Song");
     int i = 0;
     ui->listWidget->clear();
     while (1) {
@@ -84,7 +110,7 @@ void Player::musicFront()
     {
         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()-1);
     }
-    char buff[128]= "loadfile ../Audio_Player2/Song/";
+    char buff[128]= "loadfile ../Audio_Player/Song/";
     QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
     strcpy(buf,ba.data());
     strcat(buff,buf);
@@ -104,7 +130,7 @@ void Player::musicNext()
     {
         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()+1);
     }
-    char buff[128]= "loadfile ../Audio_Player2/Song/";
+    char buff[128]= "loadfile ../Audio_Player/Song/";
     QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
     strcpy(buf,ba.data());
     strcat(buff,buf);
@@ -114,23 +140,22 @@ void Player::musicNext()
     fflush(stdout);
 }
 
-void Player::VolumeSlider(int position)
-{
-    //write(fd,QString("volume " + QString::number(position) +" 2\n").toUtf8(),strlen(QString("volume " + QString::number(position) +" 2\n").toUtf8()));
-}
 
 void Player::btnMute()
 {
     int flag_mute = 1;
+    char buf_mute[128]="";
     if(flag_mute == 1)
     {
-        write(fd,"mute 0\n",strlen("mute 0\n"));
+        sprintf(buf_mute,"mute 0\n");
+        write(fd,buf_mute,strlen(buf_mute));
         flag_mute = 0;
     }
     else if(flag_mute == 0)
     {
-        write(fd,"mute 1\n",strlen("mute 1\n"));
-        qDebug();
+        sprintf(buf_mute,"mute 1\n");
+        write(fd,buf_mute,strlen(buf_mute));
+        qDebug() << buf_mute <<endl;
         flag_mute = 1;
     }
 }
