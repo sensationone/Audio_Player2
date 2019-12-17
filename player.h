@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <QWidget>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -22,11 +23,28 @@
 #include <QByteArray>
 #include <QDebug>
 #include <QVector>
+#include <QMutex>
 
+struct getCurrentInfo
+{
+    QString Song;
+    QString Singer;
+    QString Album;
+    QString CurrentTime;
+    QString TotalTime;
+    QString lyric;
+    int progress;
+    int currentTime;
+    int totalTime;
+};
 
 namespace Ui {
 class Player;
 }
+
+extern void *getTimeMsg(void *arg);
+extern void sendMsgToPlayer(char *val);
+extern void *MySendMsgToMplayer(void *arg);
 
 class Player : public QWidget
 {
@@ -41,12 +59,15 @@ public:
     void getItemOfSong();
     QVector<QString>songname;
     QVector<QString>::iterator iter;
+    getCurrentInfo getInfo;
+    void infoPrinter(void);
 
 public slots:
     void playOrPause(void);
     void musicFront(void);
     void musicNext(void);
-    void btnMute(void);
+    void btnMute(void);;
+    void SetTimeQstring(float val,QString &val1);
 
 private:
     Ui::Player *ui;
