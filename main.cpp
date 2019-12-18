@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <QDebug>
 
 #include <QApplication>
 
@@ -31,18 +32,20 @@ int main(int argc, char *argv[])
     }
     else if (pid == 0)
     {
-        int fd = open("fifo_cmd",O_RDWR);
+        int fd = open("fifo_cmd",O_RDONLY);
         int fd1[2];
         fd1[1] = open("fifo_back",O_WRONLY);
         close(0);
         dup2(fd,0);
         close(1);
         dup2(fd1[1],1);
+        qDebug()<<"1"<<endl;
         execlp("mplayer",
                " mplayer ",
                "-slave", "-quiet","-idle",
                "-input", "file=./fifo_cmd",
                "../Audio_Player/hello.mp3", NULL);
+        qDebug()<<"2"<<endl;
     }
     else
     {
@@ -50,15 +53,6 @@ int main(int argc, char *argv[])
         MainWindow w;
         w.pid_player = pid;
         w.show();
-
-        pthread_t Return_currentinfo;
-        pthread_create(&Return_currentinfo,NULL,getTimeMsg,(void *)&w);
-        pthread_detach(Return_currentinfo);
-
-//        pthread_t send_mplayer;
-//        pthread_create(&send_mplayer,NULL,MySendMsgToMplayer,NULL);
-//        pthread_detach(send_mplayer);
-
         return a.exec();
     }
 }

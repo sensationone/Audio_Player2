@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/">
         <file>Bg/4.jpg</file>
+        <file>res/laoba.png</file>
+        <file>res/long.png</file>
+        <file>res/huawei.png</file>
+        <file>Bg/bg.jpg</file>
     </qresource>
 </RCC>
