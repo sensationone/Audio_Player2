@@ -24,7 +24,6 @@
 #include <QDebug>
 #include <QVector>
 #include <QMutex>
-#include <QList>
 #include <QPainter>
 
 struct getCurrentInfo
@@ -40,14 +39,13 @@ struct getCurrentInfo
     int totalTime;
 };
 
-
 namespace Ui {
 class Player;
 }
 
-//extern void *getTimeMsg(void *arg);
-//extern void sendMsgToPlayer(char *val);
-//extern void *MySendMsgToMplayer(void *arg);
+extern void *getTimeMsg(void *arg);
+extern void sendMsgToPlayer(char *val);
+extern void *MySendMsgToMplayer(void *arg);
 
 class Player : public QWidget
 {
@@ -60,17 +58,17 @@ public:
     char buf[128];
     int fd;
     void getItemOfSong();
+    void paintEvent(QPaintEvent *);
     QVector<QString>songname;
     QVector<QString>::iterator iter;
-    getCurrentInfo getInfo;
-    void infoPrinter(void);
     QVector<QString>lrcStr;
     QVector<int>lrcRow;
     QVector<int>lrcTime;
+    getCurrentInfo getInfo;
+    void infoPrinter(void);
     int imageRotate;
-    QPixmap disc;
     int playflag = 0;
-
+    QPixmap disc;
 
 
 public slots:
@@ -78,10 +76,8 @@ public slots:
     void musicFront(void);
     void musicNext(void);
     void btnMute(void);;
-//    void SetTimeQstring(float val,QString &val1);
-    void cutLrc(void);
-    void printLrc(void);
-    void paintEvent(QPaintEvent *);
+    void SetTimeQstring(float val,QString &val1);
+    void cutLrc();
 
 private:
     Ui::Player *ui;

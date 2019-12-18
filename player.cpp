@@ -1,19 +1,16 @@
 #include "player.h"
 #include "ui_player.h"
-#include <QDebug>
 
-
-
+QMutex mutex;
 
 Player::Player(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Player)
 {
-
     ui->setupUi(this);
     ui->volumeslider->setSliderPosition(50);
     ui->volumeslider->setValue(50);
-    ui->spinBox_volume->setValue(50);
+    ui->spinBox_volume->setValue(99);
     ui->spinBox_volume->setButtonSymbols(QAbstractSpinBox::NoButtons);
     ui->spinBox_volume->setReadOnly(1);
 
@@ -48,24 +45,23 @@ Player::Player(QWidget *parent) :
         perror("open wronly fifo");
     }
 
+    //connect items at Slots
     connect(ui->btn_playpause,SIGNAL(clicked()),this,SLOT(playOrPause()));//
     connect(ui->btn_front,SIGNAL(clicked()),this,SLOT(musicFront()));
     connect(ui->btn_next,SIGNAL(clicked()),this,SLOT(musicNext()));
     connect(ui->btn_mute,SIGNAL(clicked()),this,SLOT(btnMute()));
     connect(ui->listWidget,&QListWidget::doubleClicked,[=]{
-        char buff[128]= "loadfile ../Audio_Player/Song/";
+        char buff[128]= "loadfile ../Audio_Player2/Song/";
         QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
         strcpy(buf,ba.data());
         strcat(buff,buf);
         strcat(buff,"\n");
         write(fd,buff,strlen(buff));
-        cutLrc();
-        for (int i =0;i<20;i++) {
-            qDebug()<<lrcStr[i]<<endl;
-            ui->l_lrc->setText(lrcStr[i]);
-        }
         playflag = 1;
-        infoPrinter();
+        cutLrc();
+        ui->l_name->setText(ui->listWidget->currentItem()->text().toUtf8());
+        ui->l_lrc->setText(lrcStr[16]);
+        ui->l_artist->setText(lrcStr[2]);
         printf("%s\n",buff);
         fflush(stdout);
     });
@@ -86,13 +82,13 @@ Player::Player(QWidget *parent) :
     getItemOfSong();
     ui->listWidget->setCurrentRow(6);
     infoPrinter();
+
 }
 
 Player::~Player()
 {
     delete ui;
 }
-
 
 void Player::cutLrc()
 {
@@ -105,7 +101,7 @@ void Player::cutLrc()
     int min,sec,msc;
     strcpy(buf_lrctemp,buf_lrc);
     strcpy(&(buf_lrctemp[strlen(buf_lrctemp)-4]),".lrc");
-    sprintf(add_lrc,"../Audio_Player/Lrc/%s",buf_lrctemp);
+    sprintf(add_lrc,"../Audio_Player2/Lrc/%s",buf_lrctemp);
     printf("%s\n",add_lrc);
     fflush(stdout);
     FILE *fp_lrc;
@@ -115,8 +111,8 @@ void Player::cutLrc()
         int i = 1;
         while (fgets(buf_txt, sizeof(buf_txt), fp_lrc) != NULL)
         {
-            while (*buf_txt == '[' && buf_txt[1] != 't' && buf_txt[1] != 'a' && buf_txt[1] != 'b' && buf_txt[1] != 'o')
-            {
+            //while (*buf_txt == '[' && buf_txt[1] != 't' && buf_txt[1] != 'a' && buf_txt[1] != 'b' && buf_txt[1] != 'o')
+//            {
                 int time[256];
                 sscanf(buf_txt, "[%d:%d:%d]", &min,&sec,&msc);
                 time[i] = min * 60 + sec;
@@ -128,26 +124,15 @@ void Player::cutLrc()
                 lrcStr.append(buf_txt);
 
                 i++;
-            }
+//            }
         }
     }
     fclose(fp_lrc);
 }
 
-void Player::printLrc()
-{
-//    int i=0;
-//    while(lrcRow[i+1] != NULL)
-//    {
-//        sleep(lrcTime[i+1]-lrcTime[i]);
-//        ui->l_lrc->setText(lrcStr[1]);
-//        i++;
-//    }
-}
-
 void Player::getItemOfSong()
 {
-    DIR *dir = opendir("../Audio_Player/Song");
+    DIR *dir = opendir("../Audio_Player2/Song");
     int i = 0;
     ui->listWidget->clear();
     while (1) {
@@ -180,11 +165,12 @@ void Player::playOrPause()
         write(fd,"pause\n",strlen("pause\n"));
         playflag = 1;
     }
+
 }
 
 void Player::musicFront()
 {
-    if(ui->listWidget->currentRow() == 0)//当光标在第一个文件时，点击上一个光标移动到最下面的文件
+    if(ui->listWidget->currentRow() == 0)//当光标在第一个文件时，点击上一个光标移动到最下面的文件，不播放
     {
         ui->listWidget->setCurrentRow(ui->listWidget->count()-1);
     }
@@ -192,15 +178,17 @@ void Player::musicFront()
     {
         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()-1);
     }
-    char buff[128]= "loadfile ../Audio_Player/Song/";
+    char buff[128]= "loadfile ../Audio_Player2/Song/";
     QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
     strcpy(buf,ba.data());
     strcat(buff,buf);
     strcat(buff,"\n");
     write(fd,buff,strlen(buff));
-    cutLrc();
-    infoPrinter();
     playflag = 1;
+    cutLrc();
+    ui->l_name->setText(ui->listWidget->currentItem()->text().toUtf8());
+    ui->l_lrc->setText(lrcStr[16]);
+    ui->l_artist->setText(lrcStr[2]);
     printf("%s\n",buff);
     fflush(stdout);
 }
@@ -209,22 +197,24 @@ void Player::musicNext()
 {
     if(ui->listWidget->currentRow() == ui->listWidget->count()-1)
     {
-        ui->listWidget->setCurrentRow(0);//当光标在最后一个文件时，点击下一个，光标移动到第一个
+        ui->listWidget->setCurrentRow(0);//当光标在最后一个文件时，点击下一个，光标移动到第一个，不播放
     }
     else
     {
         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()+1);
     }
-    char buff[128]= "loadfile ../Audio_Player/Song/";
+    char buff[128]= "loadfile ../Audio_Player2/Song/";
     QByteArray ba = ui->listWidget->currentItem()->text().toUtf8();
     strcpy(buf,ba.data());
     strcat(buff,buf);
     strcat(buff,"\n");
     write(fd,buff,strlen(buff));
-    cutLrc();
-    infoPrinter();
-    playflag = 1;
     printf("%s\n",buff);
+    playflag = 1;
+    cutLrc();
+    ui->l_name->setText(ui->listWidget->currentItem()->text().toUtf8());
+    ui->l_lrc->setText(lrcStr[16]);
+    ui->l_artist->setText(lrcStr[2]);
     fflush(stdout);
     update();
 }
@@ -249,17 +239,17 @@ void Player::btnMute()
     }
 }
 
-//void Player::SetTimeQstring(float val,QString &val1)
-//{
-//    char buff[128] = {0};
-//    int i = val;
+void Player::SetTimeQstring(float val,QString &val1)
+{
+    char buff[128] = {0};
+    int i = val;
 
-//    int minute = i/60;
-//    int second = i%60;
-//    //int msec = ((int)(val*10))%10;
-//    sprintf(buff,"%02d:%02d",minute,second);
-//    val1 = QString(buff);
-//}
+    int minute = i/60;
+    int second = i%60;
+    //int msec = ((int)(val*10))%10;
+    sprintf(buff,"%02d:%02d",minute,second);
+    val1 = QString(buff);
+}
 
 void Player::infoPrinter()
 {
@@ -272,96 +262,95 @@ void Player::infoPrinter()
     ui->horizontalSlider->setValue(1000*getInfo.progress);
 }
 
-//void *getTimeMsg(void *arg)
-//{
-//    int fd2 = open("fifo_back",O_RDONLY);
-//    char val[128] = "";
-//    char buf[128] = "";
-//    float val1;
-//    char cmd[128] = "";
-//    Player *m = (Player *)arg;
-//    while(1)
-//    {
-//        bzero(val,sizeof(val));
-//        bzero(buf,sizeof (buf));
-//        bzero(cmd,sizeof(cmd));
-//        val1 =0;
-//        read(fd2,buf,sizeof (buf));
+void *getTimeMsg(void *arg)
+{
+    int fd2 = open("fifo_back",O_RDONLY);
+    char val[128] = "";
+    char buf[128] = "";
+    float val1;
+    char cmd[128] = "";
+    Player *m = (Player *)arg;
+    while(1)
+    {
+        bzero(val,sizeof(val));
+        bzero(buf,sizeof (buf));
+        bzero(cmd,sizeof(cmd));
+        val1 =0;
+        read(fd2,buf,sizeof (buf));
 
-//        sscanf(buf,"%[^=]",cmd);
-//        if(strcmp(cmd,"ANS_PERCENT_POSITION") == 0)//百分比
-//        {
-//            int percent_pos = 0;
-//            sscanf(buf,"%*[^=]=%d",&percent_pos);
-//            m->getInfo.progress = percent_pos;
+        sscanf(buf,"%[^=]",cmd);
+        if(strcmp(cmd,"ANS_PERCENT_POSITION") == 0)//百分比
+        {
+            int percent_pos = 0;
+            sscanf(buf,"%*[^=]=%d",&percent_pos);
+            m->getInfo.progress = percent_pos;
 
-//        }
-//        else if(strcmp(cmd,"ANS_TIME_POSITION") == 0)//当前时间
-//        {
-//            float time_pos = 0;
-//            sscanf(buf,"%*[^=]=%f", &time_pos);
+        }
+        else if(strcmp(cmd,"ANS_TIME_POSITION") == 0)//当前时间
+        {
+            float time_pos = 0;
+            sscanf(buf,"%*[^=]=%f", &time_pos);
 
-//            m->SetTimeQstring(time_pos,m->getInfo.CurrentTime);
-//            m->getInfo.currentTime = time_pos;
-//        }
-//        else if(strcmp(cmd,"ANS_META_ALBUM") == 0)
-//        {
+            m->SetTimeQstring(time_pos,m->getInfo.CurrentTime);
+            m->getInfo.currentTime = time_pos;
+        }
+        else if(strcmp(cmd,"ANS_META_ALBUM") == 0)
+        {
 
-//            sscanf(buf,"%*[^=]='%s'",val);
+            sscanf(buf,"%*[^=]='%s'",val);
 
-//            m->getInfo.Album = val;
-//        }
-//        else if(strcmp(cmd,"ANS_META_ARTIST") == 0)
-//        {
+            m->getInfo.Album = val;
+        }
+        else if(strcmp(cmd,"ANS_META_ARTIST") == 0)
+        {
 
-//            sscanf(buf,"%*[^=]='%s'",val);
+            sscanf(buf,"%*[^=]='%s'",val);
 
-//            m->getInfo.Singer = val;
-//        }
-//        else if(strcmp(cmd,"ANS_LENGTH") == 0)
-//        {
+            m->getInfo.Singer = val;
+        }
+        else if(strcmp(cmd,"ANS_LENGTH") == 0)
+        {
 
-//            sscanf(buf,"%*[^=]=%f",&val1);
+            sscanf(buf,"%*[^=]=%f",&val1);
 
-//            m->SetTimeQstring(val1,m->getInfo.TotalTime);
-//            m->getInfo.totalTime = val1;
-//        }
-//        else
-//        {
-//        }
-//        fflush(stdout);
-//    }
-//}
+            m->SetTimeQstring(val1,m->getInfo.TotalTime);
+            m->getInfo.totalTime = val1;
+        }
+        else
+        {
+        }
+        fflush(stdout);
+    }
+}
 
-//void sendMsgToPlayer(char *val)
-//{
-//    int fd = open("fifo_cmd",O_RDWR);
-//    write(fd,val,strlen(val));
-//    close(fd);
-//}
+void sendMsgToPlayer(char *val)
+{
+    int fd = open("fifo_cmd",O_RDWR);
+    write(fd,val,strlen(val));
+    close(fd);
+}
 
-//void *MySendMsgToMplayer(void *arg)
-//{
+void *MySendMsgToMplayer(void *arg)
+{
 
 
-//    usleep(200*10000+800000);
-//    //不停的给fifo_cmd发送获取当前时间以及进度
-//    while(1)
-//    {
-//        //mutex.lock();
-//        usleep(500*100);//0.05秒发指令
-//        sendMsgToPlayer("get_percent_pos\n");
-//        usleep(500*100);
-//        sendMsgToPlayer("get_time_pos\n");
-//        usleep(500*100);//0.05秒发指令
-//        sendMsgToPlayer("get_time_length\n");
-//        usleep(500*100);//0.05秒发指令
-//        sendMsgToPlayer("get_meta_artist\n");
-//        //mutex.unlock();
-//        usleep(500*100);//0.05秒发指令
-//    }
-//}
-
+    usleep(200*10000+800000);//111
+    //不停的给fifo_cmd发送获取当前时间以及进度
+    while(1)
+    {
+        mutex.lock();
+        usleep(500*100);//0.05秒发指令
+        sendMsgToPlayer("get_percent_pos\n");
+        usleep(500*100);
+        sendMsgToPlayer("get_time_pos\n");
+        usleep(500*100);//0.05秒发指令
+        sendMsgToPlayer("get_time_length\n");
+        usleep(500*100);//0.05秒发指令
+        sendMsgToPlayer("get_meta_artist\n");
+        mutex.unlock();
+        usleep(500*100);//0.05秒发指令
+    }
+}
 
 void Player::paintEvent(QPaintEvent *)
 {
